@@ -1,4 +1,6 @@
 """Network utility functions."""
+import re
+
 import IPy
 import random
 import requests
@@ -6,6 +8,16 @@ from lxml import etree
 
 
 _TLS_PORTS = {443, 8443}
+
+
+def looks_like_target(value: str) -> bool:
+    """True if *value* is an IP / CIDR / range instead of a filename."""
+    s = (value or '').strip()
+    if not s or s.startswith('#'):
+        return False
+    if '/' in s or (s.count('.') == 3 and '-' in s):
+        return True
+    return bool(re.match(r'^\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?$', s))
 
 
 def base_url(ip, port) -> str:

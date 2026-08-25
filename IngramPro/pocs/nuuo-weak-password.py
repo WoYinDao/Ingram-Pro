@@ -27,7 +27,7 @@ class NuuoWeakPassword(POCTemplate):
                     'submit': 'Login'
                 }
                 try:
-                    r = self.session.post(f"http://{ip}:{port}/login.php", data=data, timeout=self.config.timeout, headers=self.headers, verify=False)
+                    r = self.session.post(self.url(ip, port, "/login.php"), data=data, timeout=self.config.timeout, headers=self.headers, verify=False)
                     if r.status_code == 200 and 'loginfail' not in r.text:
                         return ip, str(port), self.product, str(user), str(password), self.name
                 except Exception as e:

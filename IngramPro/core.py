@@ -87,10 +87,11 @@ class Core:
                 self.snap_thread = Thread(
                     target=self.snapshot_pipeline.process, args=[self], daemon=True)
                 self.snap_thread.start()
+            # imap_unordered keeps at most th_num greenlets in flight (the old
+            # spawn-all-then-join queue could hold the entire IP list in RAM).
             scan_pool = geventPool(self.config.th_num)
-            for ip in self.data.ip_generator:
-                scan_pool.start(gevent.spawn(self._scan, ip))
-            scan_pool.join()
+            for _ in scan_pool.imap_unordered(self._scan, self.data.ip_generator):
+                pass
             self.status_bar_thread.join()
             self.report()
         except KeyboardInterrupt:

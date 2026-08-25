@@ -4,7 +4,7 @@ from collections import defaultdict
 from .base import POCTemplate
 
 for file in os.listdir(os.path.dirname(__file__)):
-    if (file_name := file.split(".")[0]) not in ["__init__", "base"]:
+    if (file_name := file.split(".")[0]) not in ["__init__", "base"] and not file.startswith("_"):
         importlib.import_module(f".{file_name}", "IngramPro.pocs")
 
 

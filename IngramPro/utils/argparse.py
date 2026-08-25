@@ -7,7 +7,7 @@ def get_parse():
         description='Ingram-Pro: Network camera vulnerability scanner (enhanced)'
     )
     parser.add_argument('-i', '--in_file',  type=str, required=True,
-                        help='File containing target IP addresses (one per line)')
+                        help='Target file, or a single IP / CIDR / range')
     parser.add_argument('-o', '--out_dir',  type=str, required=True,
                         help='Directory to save results')
     parser.add_argument('-p', '--ports',    type=int, nargs='+', default=None,

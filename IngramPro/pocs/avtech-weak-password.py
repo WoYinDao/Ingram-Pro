@@ -22,7 +22,7 @@ class AVTechWeakPassword(POCTemplate):
         for user in self.config.users:
             for password in self.config.passwords:
                 account = base64.b64encode(f"{user}:{password}".encode('utf8')).decode()
-                url = f"http://{ip}:{port}/cgi-bin/nobody/VerifyCode.cgi?account={account}"
+                url = self.url(ip, port, f"/cgi-bin/nobody/VerifyCode.cgi?account={account}")
                 try:
                     r = self.session.get(url, headers=headers, verify=False, timeout=self.config.timeout)
                     if r.status_code == 200:

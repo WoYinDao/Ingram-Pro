@@ -17,6 +17,7 @@ from loguru import logger
 from IngramPro import get_config, Core
 from IngramPro.utils import color, common, get_parse, log
 from IngramPro.utils.logo import logo
+from IngramPro.utils.net import looks_like_target
 
 
 def run():
@@ -27,17 +28,21 @@ def run():
 
         config = get_config(get_parse())
 
-        if not os.path.isdir(config.out_dir):
-            os.mkdir(config.out_dir)
-            os.mkdir(os.path.join(config.out_dir, config.snapshots))
+        os.makedirs(os.path.join(config.out_dir, config.snapshots), exist_ok=True)
 
         if not os.path.isfile(config.in_file):
-            print(
-                f"{color.red('Input file')} "
-                f"{color.yellow(config.in_file)} "
-                f"{color.red('does not exist!')}"
-            )
-            sys.exit(1)
+            if looks_like_target(config.in_file):
+                inline = os.path.join(config.out_dir, '.inline_targets.txt')
+                with open(inline, 'w', encoding='utf-8') as fh:
+                    fh.write(config.in_file.strip() + '\n')
+                config = config._replace(in_file=inline)
+            else:
+                print(
+                    f"{color.red('Input file')} "
+                    f"{color.yellow(config.in_file)} "
+                    f"{color.red('does not exist!')}"
+                )
+                sys.exit(1)
 
         log.config_logger(os.path.join(config.out_dir, config.log), config.debug)
 

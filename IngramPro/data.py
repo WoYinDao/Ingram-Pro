@@ -30,6 +30,7 @@ class Data:
         self.done_lock = Lock()
         self.vulnerable_lock = Lock()
         self.not_vulneralbe_lock = Lock()
+        self.state_lock = Lock()
         self.preprocess()
 
     def _load_state_from_disk(self):
@@ -109,8 +110,9 @@ class Data:
         if self.done % 20 == 0:
             elapsed = self.runned_time + timer.get_time_stamp() - self.create_time
             state = os.path.join(self.config.out_dir, f".{self.taskid}")
-            with open(state, "w") as f:
-                f.write(f"{self.done},{self.found},{elapsed}")
+            with self.state_lock:
+                with open(state, "w") as f:
+                    f.write(f"{self.done},{self.found},{elapsed}")
 
     def __del__(self):
         try:

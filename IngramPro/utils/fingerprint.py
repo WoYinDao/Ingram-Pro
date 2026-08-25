@@ -8,7 +8,6 @@ import requests
 from loguru import logger
 from lxml import etree
 
-from .net import base_url
 
 
 def _parse(req, rule_val):
@@ -67,23 +66,35 @@ def fingerprint(ip, port, config):
         rules_by_path[rule.path].append(rule)
 
     headers = {'Connection': 'close', 'User-Agent': config.user_agent}
-    with requests.Session() as session:
-        for path, rules in rules_by_path.items():
-            try:
-                req = session.get(
-                    f'{base_url(ip, port)}{path}',
-                    headers=headers,
-                    timeout=config.timeout,
-                    verify=False,
-                )
-            except Exception as e:
-                logger.error(e)
-                continue
-            for rule in rules:
+    # Prefer TLS on 443/8443. On other ports try HTTP first, then HTTPS only
+    # if every HTTP request failed to connect (TLS-only boxes on 80/8080).
+    if int(port) in (443, 8443):
+        schemes = ('https', 'http')
+    else:
+        schemes = ('http', 'https')
+
+    for scheme in schemes:
+        got_response = False
+        with requests.Session() as session:
+            for path, rules in rules_by_path.items():
                 try:
-                    if _parse(req, rule.val):
-                        return rule.product
+                    req = session.get(
+                        f'{scheme}://{ip}:{port}{path}',
+                        headers=headers,
+                        timeout=config.timeout,
+                        verify=False,
+                    )
+                    got_response = True
                 except Exception as e:
                     logger.error(e)
+                    continue
+                for rule in rules:
+                    try:
+                        if _parse(req, rule.val):
+                            return rule.product
+                    except Exception as e:
+                        logger.error(e)
+        if got_response:
+            break
 
     return None

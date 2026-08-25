@@ -21,7 +21,7 @@ class InstarWeakPassword(POCTemplate):
         for user in self.config.users:
             for password in self.config.passwords:
                 try:
-                    r = self.session.get(url=f"http://{ip}:{port}/login.cgi", auth=(user, password), timeout=self.config.timeout, headers=self.headers, verify=False)
+                    r = self.session.get(url=self.url(ip, port, "/login.cgi"), auth=(user, password), timeout=self.config.timeout, headers=self.headers, verify=False)
                     if r.status_code == 200:
                         return ip, str(port), self.product, str(user), str(password), self.name
                 except Exception as e:
@@ -32,8 +32,8 @@ class InstarWeakPassword(POCTemplate):
         # ip, port, product, user, password, vul = results
         # img_file_name = f"{ip}-{port}-{user}-{password}.jpg"
         # for url in [
-        #         f"http://{ip}:{port}/media/?action=snapshot",
-        #         f"http://{ip}:{port}/cgi-bin/images_cgi?channel=0",
+        #         self.url(ip, port, "/media/?action=snapshot"),
+        #         self.url(ip, port, "/cgi-bin/images_cgi?channel=0"),
         #     ]:
         #     if self._snapshot(url, img_file_name, auth=(user, password)):
         #         return 1

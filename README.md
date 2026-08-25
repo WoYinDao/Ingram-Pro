@@ -13,9 +13,11 @@ Upstream `0x5477/Ingram-Pro` shipped **without `rules.csv`** (`.gitignore` had `
 ```bash
 pip install -r requirements.txt
 python run_ingram_pro.py -i targets.txt -o ./out
+python run_ingram_pro.py -i 192.168.1.100 -o ./out
+python run_ingram_pro.py -i 10.0.0.0/24 -o ./out
 ```
 
-`targets.txt` is one target per line: `1.2.3.4`, `1.2.3.4:8080`, or a CIDR / range.
+`-i` accepts a file (one target per line) **or** a single IP / CIDR / range.
 
 | Flag | Meaning |
 |------|---------|
