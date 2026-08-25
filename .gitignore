@@ -1,5 +1,6 @@
 out/
 *.csv
+!IngramPro/rules.csv
 *.xlsx
 *.log
 __pycache__/

@@ -3,7 +3,9 @@ gevent
 IPy
 loguru
 lxml
+ndjson
 pycryptodome
 pyOpenSSL
+pwntools
 requests
 tzlocal

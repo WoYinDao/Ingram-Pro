@@ -40,6 +40,13 @@ def get_config(args=None):
     # Load fingerprint rules from rules.csv
     Rule = namedtuple('Rule', ['product', 'path', 'val'])
     rules_file = os.path.join(os.path.dirname(__file__), 'rules.csv')
+    if not os.path.isfile(rules_file):
+        # Without rules.csv fingerprinting can't identify any product, which
+        # means no POC ever runs. Fail loud instead of crashing on open().
+        raise FileNotFoundError(
+            f"fingerprint rules file not found: {rules_file}. "
+            "Ingram cannot identify devices without it."
+        )
     with open(rules_file, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()

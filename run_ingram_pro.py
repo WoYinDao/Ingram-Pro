@@ -19,6 +19,7 @@ from IngramPro.utils.logo import logo
 
 
 def run():
+    p = None
     try:
         for icon, font in zip(*logo):
             print(f"{color.yellow(icon, 'bright')}  {color.magenta(font, 'bright')}")
@@ -48,10 +49,11 @@ def run():
 
     except KeyboardInterrupt:
         logger.warning('Interrupted by user (Ctrl+C)')
-        try:
-            p.kill()
-        except Exception:
-            pass
+        if p is not None:
+            try:
+                p.kill()
+            except Exception:
+                pass
         sys.exit(0)
 
     except Exception as e:

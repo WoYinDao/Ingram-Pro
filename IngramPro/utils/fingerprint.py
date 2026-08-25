@@ -1,6 +1,8 @@
 """Device fingerprinting based on HTTP responses and rules.csv."""
 import hashlib
 import re
+from collections import defaultdict
+
 import requests
 
 from loguru import logger
@@ -60,23 +62,29 @@ def fingerprint(ip, port, config):
 
     Returns the product name string on match, or None if unrecognised.
     """
-    req_cache = {}   # cache HTTP responses to avoid redundant requests
-    session = requests.Session()
-    headers = {'Connection': 'close', 'User-Agent': config.user_agent}
-
+    # Group rules by path so each unique path is requested exactly once per
+    # target (the old per-rule cache re-requested any non-200 path repeatedly).
+    rules_by_path = defaultdict(list)
     for rule in config.rules:
-        try:
-            req = req_cache.get(rule.path) or session.get(
-                f'http://{ip}:{port}{rule.path}',
-                headers=headers,
-                timeout=config.timeout,
-            )
-            # Only cache successful responses
-            if rule.path not in req_cache and req.status_code == 200:
-                req_cache[rule.path] = req
-            if _parse(req, rule.val):
-                return rule.product
-        except Exception as e:
-            logger.error(e)
+        rules_by_path[rule.path].append(rule)
+
+    headers = {'Connection': 'close', 'User-Agent': config.user_agent}
+    with requests.Session() as session:
+        for path, rules in rules_by_path.items():
+            try:
+                req = session.get(
+                    f'http://{ip}:{port}{path}',
+                    headers=headers,
+                    timeout=config.timeout,
+                )
+            except Exception as e:
+                logger.error(e)
+                continue
+            for rule in rules:
+                try:
+                    if _parse(req, rule.val):
+                        return rule.product
+                except Exception as e:
+                    logger.error(e)
 
     return None
