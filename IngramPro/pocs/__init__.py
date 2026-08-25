@@ -12,5 +12,6 @@ def get_poc_dict(config):
     poc_dict = defaultdict(list)
     for POC in POCTemplate.poc_classes:
         poc = POC(config)
-        poc_dict[poc.product].append(poc)
+        for product in (getattr(poc, 'products', None) or [poc.product]):
+            poc_dict[product].append(poc)
     return poc_dict

@@ -8,6 +8,8 @@ import requests
 from loguru import logger
 from lxml import etree
 
+from .net import base_url
+
 
 def _parse(req, rule_val):
     """
@@ -33,15 +35,11 @@ def _parse(req, rule_val):
                 pass
 
         elif left == 'body':
-            try:
-                html = etree.HTML(req.text)
-                body_nodes = html.xpath('//body')
-                if body_nodes:
-                    for node in body_nodes[0]:
-                        if right.lower() in node.xpath('string(.)').lower():
-                            return True
-            except Exception:
-                pass
+            # Match the raw response as well as parsed <body> text. The old
+            # xpath-children-only check missed strings that live in <script>
+            # or as attributes (common on Hikvision login pages).
+            if right.lower() in (req.text or '').lower():
+                return True
 
         elif left == 'headers':
             for header_item in req.headers.items():
@@ -73,9 +71,10 @@ def fingerprint(ip, port, config):
         for path, rules in rules_by_path.items():
             try:
                 req = session.get(
-                    f'http://{ip}:{port}{path}',
+                    f'{base_url(ip, port)}{path}',
                     headers=headers,
                     timeout=config.timeout,
+                    verify=False,
                 )
             except Exception as e:
                 logger.error(e)

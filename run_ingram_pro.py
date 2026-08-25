@@ -6,6 +6,7 @@
 
 import warnings; warnings.filterwarnings("ignore")
 from gevent import monkey; monkey.patch_all(thread=False)
+import urllib3; urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 import os
 import sys
