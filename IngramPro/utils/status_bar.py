@@ -28,7 +28,7 @@ def _bar():
         icon = f'[{icon}]'
 
         # ETA
-        time_pred = time_used * (total / (done + 0.001))   # avoid divide-by-zero
+        time_pred = time_used * (total / done) if done else 0   # avoid divide-by-zero
         time_used_str = color.cyan(timer.time_formatter(time_used), 'bright')
         time_pred_str = color.white(timer.time_formatter(time_pred), 'bright')
         _time = f'Time: {time_used_str}/{time_pred_str}'

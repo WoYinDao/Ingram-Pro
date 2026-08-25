@@ -34,6 +34,11 @@ class POCTemplate:
             'Connection': 'keep-alive',
             'User-Agent': self.config.user_agent,
         })
+        # One weak-password probe per camera can take a while; cap retries so a
+        # flaky host does not stall a whole greenlet.
+        from requests.adapters import HTTPAdapter
+        self.session.mount('http://', HTTPAdapter(max_retries=1))
+        self.session.mount('https://', HTTPAdapter(max_retries=1))
 
     def get_file_name(self, file):
         """Return the stem of the given file path (used as POC name)."""

@@ -62,7 +62,7 @@ class Core:
                     if results := poc.verify(ip, port):
                         verified = True
                         self.data.add_found()
-                        self.data.add_vulnerable(results[:6])
+                        self.data.add_vulnerable([str(x) for x in results[:6]])
                         if not self.config.disable_snapshot:
                             self.snapshot_pipeline.put((poc.exploit, results))
                 if not verified:

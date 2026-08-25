@@ -52,27 +52,18 @@ class Data:
                     self.add_total(net.get_ip_seg_len(s))
 
     def _generate_ip(self):
-        current = 0
-        remain_gen = None
+        # Skip the first `done` targets when resuming, then yield the rest.
+        # The old loop re-entered the file from the top after the resume point
+        # and re-scanned already-finished segments.
+        seen = 0
         with open(self.config.in_file, "r") as f:
-            if self.done:
-                for line in f:
-                    if (s := line.strip()) and not line.startswith("#"):
-                        seg_len = net.get_ip_seg_len(s)
-                        current += seg_len
-                        if current == self.done:
-                            break
-                        elif current < self.done:
-                            continue
-                        else:
-                            skip = self.done - (current - seg_len)
-                            remain_gen = itertools.islice(net.get_all_ip(s), skip, None)
-                            break
-                if remain_gen:
-                    yield from remain_gen
             for line in f:
                 if (s := line.strip()) and not line.startswith("#"):
-                    yield from net.get_all_ip(s)
+                    for ip in net.get_all_ip(s):
+                        if seen < self.done:
+                            seen += 1
+                            continue
+                        yield ip
 
     def preprocess(self):
         out = self.config.out_dir
