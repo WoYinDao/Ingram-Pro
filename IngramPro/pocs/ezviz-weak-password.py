@@ -1,5 +1,6 @@
 """EZVIZ camera weak password check."""
 import requests
+from requests.auth import HTTPDigestAuth
 from loguru import logger
 from .base import POCTemplate
 
@@ -18,7 +19,7 @@ class EZVIZWeakPassword(POCTemplate):
             for password in self.config.passwords:
                 url = self.url(ip, port, "/ISAPI/Security/userCheck")
                 try:
-                    r = self.session.get(url, headers=headers, auth=(user, password),
+                    r = self.session.get(url, headers=headers, auth=HTTPDigestAuth(user, password),
                                          timeout=self.config.timeout, verify=False)
                     if (r.status_code == 200
                             and "userCheck" in r.text and "200" in r.text):

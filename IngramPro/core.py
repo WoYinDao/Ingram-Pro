@@ -1,4 +1,5 @@
 import os
+import time
 from collections import defaultdict
 from threading import Thread
 
@@ -21,14 +22,17 @@ class Core:
         self.poc_dict = get_poc_dict(self.config)
 
     def finish(self):
-        return (self.data.done >= self.data.total) and (
-            self.snapshot_pipeline.task_count <= 0)
+        return (
+            self.data.done >= self.data.total
+            and self.snapshot_pipeline.task_count <= 0
+            and self.snapshot_pipeline.empty()
+        )
 
     def report(self):
         results_file = os.path.join(self.config.out_dir, self.config.vulnerable)
         if not os.path.exists(results_file):
             return
-        with open(results_file, "r") as f:
+        with open(results_file, "r", encoding="utf-8") as f:
             items = [l.strip().split(",") for l in f if l.strip()]
         if not items:
             return
@@ -40,7 +44,7 @@ class Core:
         total = len(items)
         max_cnt = max(v for d in results.values() for v in d.values())
         print("\n")
-        print("-" * 19, "REPORT", "-" * 19)
+        print("-" * 19, "扫描报告", "-" * 19)
         for dev in results:
             vuls = list(results[dev].items())
             dev_sum = sum(c for _, c in vuls)
@@ -48,7 +52,7 @@ class Core:
             for vul_name, vul_count in vuls:
                 blocks = int(vul_count / max_cnt * 25)
                 print(color.green(f"{vul_name:>28} | {'▥' * blocks} {vul_count}"))
-        print(color.yellow(f"{'sum: ' + str(total):>46}", "bright"), flush=True)
+        print(color.yellow(f"{'总计: ' + str(total):>46}", "bright"), flush=True)
         print("-" * 46)
         print("\n")
 
@@ -79,7 +83,11 @@ class Core:
 
     def run(self):
         logger.info(f"running at {timer.get_time_formatted()}")
-        logger.info(f"config is {self.config}")
+        logger.info(
+            f"config: in={self.config.in_file} out={self.config.out_dir} "
+            f"ports={len(self.config.ports)} th={self.config.th_num} "
+            f"timeout={self.config.timeout} snapshot={not self.config.disable_snapshot}"
+        )
         try:
             self.status_bar_thread = Thread(target=status_bar, args=[self], daemon=True)
             self.status_bar_thread.start()
@@ -92,9 +100,32 @@ class Core:
             scan_pool = geventPool(self.config.th_num)
             for _ in scan_pool.imap_unordered(self._scan, self.data.ip_generator):
                 pass
-            self.status_bar_thread.join()
+            self._shutdown()
             self.report()
         except KeyboardInterrupt:
-            pass
+            self._shutdown()
         except Exception as e:
             logger.error(e)
+            self._shutdown()
+
+    def _shutdown(self):
+        """Drain snapshot queue, stop workers, persist state, close files."""
+        try:
+            if not self.config.disable_snapshot:
+                # wait until queued snapshots are consumed and finished
+                deadline = timer.get_time_stamp() + 30
+                while not self.snapshot_pipeline.empty() or self.snapshot_pipeline.task_count > 0:
+                    if timer.get_time_stamp() > deadline:
+                        break
+                    time.sleep(0.1)
+                self.snapshot_pipeline.workers.shutdown(wait=True)
+        except Exception as e:
+            logger.error(e)
+        try:
+            self.data.close()
+        except Exception as e:
+            logger.error(e)
+        try:
+            self.status_bar_thread.join(timeout=1)
+        except Exception:
+            pass

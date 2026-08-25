@@ -1,5 +1,6 @@
 """Hanwha Wisenet camera weak password check."""
 import requests
+from requests.auth import HTTPDigestAuth
 from loguru import logger
 from .base import POCTemplate
 
@@ -18,7 +19,7 @@ class HanwhaWeakPassword(POCTemplate):
             for password in self.config.passwords:
                 url = self.url(ip, port, "/stw-cgi/system.cgi?msubmenu=deviceinfo&action=view")
                 try:
-                    r = self.session.get(url, headers=headers, auth=(user, password),
+                    r = self.session.get(url, headers=headers, auth=HTTPDigestAuth(user, password),
                                          timeout=self.config.timeout, verify=False)
                     if r.status_code == 200 and any(
                             k in r.text.lower() for k in ["devicename", "serialnumber", "firmware"]):

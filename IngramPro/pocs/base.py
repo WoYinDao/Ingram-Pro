@@ -25,6 +25,9 @@ class POCTemplate:
         # Optional extra brand keys this POC should also run against
         # (Amcrest is Dahua OEM, etc.). Consumed by get_poc_dict().
         self.products = None
+        # Set False on reference-only modules (no safe HTTP oracle) so they are
+        # registered but never scheduled.
+        self.enabled = True
         self.product_version = ''
         self.ref = ''
         self.level = self.level.low

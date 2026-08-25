@@ -38,9 +38,9 @@ def run():
                 config = config._replace(in_file=inline)
             else:
                 print(
-                    f"{color.red('Input file')} "
+                    f"{color.red('输入文件')} "
                     f"{color.yellow(config.in_file)} "
-                    f"{color.red('does not exist!')}"
+                    f"{color.red('不存在！')}"
                 )
                 sys.exit(1)
 
@@ -54,7 +54,7 @@ def run():
             p.join()
 
     except KeyboardInterrupt:
-        logger.warning('Interrupted by user (Ctrl+C)')
+        logger.warning('用户中断（Ctrl+C）')
         if p is not None:
             try:
                 p.kill()

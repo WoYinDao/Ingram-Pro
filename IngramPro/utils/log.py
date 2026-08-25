@@ -4,11 +4,8 @@ from loguru import logger
 
 
 def _not_debug_filter(record):
-    """
-    Filter used when debug mode is OFF.
-    Suppresses ERROR and DEBUG level messages to keep output clean.
-    """
-    return record['level'].name not in ('ERROR', 'DEBUG')
+    """Non-debug console: hide DEBUG, keep WARNING and ERROR visible."""
+    return record['level'].name != 'DEBUG'
 
 
 

@@ -15,8 +15,17 @@ def looks_like_target(value: str) -> bool:
     s = (value or '').strip()
     if not s or s.startswith('#'):
         return False
-    if '/' in s or (s.count('.') == 3 and '-' in s):
+    if '/' in s:
         return True
+    if '-' in s:
+        a, _, b = s.partition('-')
+        a = a.split(':')[0]
+        if re.match(r'^\d{1,3}(?:\.\d{1,3}){3}$', a):
+            return bool(
+                re.match(r'^\d{1,3}$', b) or
+                re.match(r'^\d{1,3}(?:\.\d{1,3}){3}$', b)
+            )
+        return False
     return bool(re.match(r'^\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?$', s))
 
 

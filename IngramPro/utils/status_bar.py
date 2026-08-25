@@ -31,14 +31,14 @@ def _bar():
         time_pred = time_used * (total / done) if done else 0   # avoid divide-by-zero
         time_used_str = color.cyan(timer.time_formatter(time_used), 'bright')
         time_pred_str = color.white(timer.time_formatter(time_pred), 'bright')
-        _time = f'Time: {time_used_str}/{time_pred_str}'
+        _time = f'耗时: {time_used_str}/{time_pred_str}'
 
         # Progress counters
         _total   = color.blue(total, 'bright')
         _done    = color.blue(done, 'bright')
         _pct     = color.yellow(f'{round(done / (total + 0.001) * 100, 1)}%', 'bright')
-        _found   = 'Found '    + color.red(found,    'bright') if found    else ''
-        _snap    = 'Snapshot ' + color.red(snapshot, 'bright') if snapshot else ''
+        _found   = '命中 '    + color.red(found,    'bright') if found    else ''
+        _snap    = '快照 ' + color.red(snapshot, 'bright') if snapshot else ''
         count = f'{_done}/{_total}({_pct}) {_found} {_snap}'
 
         print(f'\r{icon} {count} {_time}        ', end='')

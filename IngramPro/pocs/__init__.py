@@ -12,6 +12,8 @@ def get_poc_dict(config):
     poc_dict = defaultdict(list)
     for POC in POCTemplate.poc_classes:
         poc = POC(config)
+        if not getattr(poc, 'enabled', True):
+            continue
         for product in (getattr(poc, 'products', None) or [poc.product]):
             poc_dict[product].append(poc)
     return poc_dict

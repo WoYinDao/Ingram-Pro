@@ -55,8 +55,8 @@ class XioingmaiBypass(POCTemplate):
                     verify=False, timeout=self.config.timeout)
                 if match := re.search(r'<tt:Uri>(.*?)</tt:Uri>', r.text):
                     link = match.group(1).replace("&amp;", "&")
-                    user = re.findall('user=(.*)&', link)
-                    password = re.findall('password=(.*)', link)
+                    user = re.findall(r'user=([^&]+)&', link)
+                    password = re.findall(r'password=([^&]+)', link)
                     if user and password:
                         return ip, str(port), self.product, user[0], password[0], self.name
             except Exception as e:

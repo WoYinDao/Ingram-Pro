@@ -25,7 +25,7 @@ class HikvisionWeakPassword(POCTemplate):
                 try:
                     r = self.session.get(
                         url=self.url(ip, port, "/ISAPI/Security/userCheck"),
-                        auth=(user, password),
+                        auth=HTTPDigestAuth(user, password),
                         timeout=self.config.timeout,
                         headers=self.headers,
                         verify=False

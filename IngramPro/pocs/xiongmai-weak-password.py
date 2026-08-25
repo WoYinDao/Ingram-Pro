@@ -27,7 +27,7 @@ class XioingmaiWeakPassword(POCTemplate):
                     'password': password
                 }
                 try:
-                    r = self.session.get(url, headers=headers, data=data, verify=False, timeout=self.config.timeout)
+                    r = self.session.post(url, headers=headers, data=data, verify=False, timeout=self.config.timeout)
                     if r.status_code == 200 and 'failed' not in r.text:
                         ch_num = 0
                         if channel := re.findall(r'g_channelNumber=(.*);', r.text):

@@ -46,29 +46,35 @@ class Data:
                     self.runned_time = float(_runned_time)
 
     def _cal_total(self):
-        with open(self.config.in_file, "r") as f:
+        with open(self.config.in_file, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
-                if (s := line.strip()) and not line.startswith("#"):
-                    self.add_total(net.get_ip_seg_len(s))
+                if (s := line.strip()) and not s.startswith("#"):
+                    try:
+                        self.add_total(net.get_ip_seg_len(s))
+                    except Exception as e:
+                        logger.warning(f"skip bad target line {s!r}: {e}")
 
     def _generate_ip(self):
         # Skip the first `done` targets when resuming, then yield the rest.
         # The old loop re-entered the file from the top after the resume point
         # and re-scanned already-finished segments.
         seen = 0
-        with open(self.config.in_file, "r") as f:
+        with open(self.config.in_file, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
-                if (s := line.strip()) and not line.startswith("#"):
-                    for ip in net.get_all_ip(s):
-                        if seen < self.done:
-                            seen += 1
-                            continue
-                        yield ip
+                if (s := line.strip()) and not s.startswith("#"):
+                    try:
+                        for ip in net.get_all_ip(s):
+                            if seen < self.done:
+                                seen += 1
+                                continue
+                            yield ip
+                    except Exception as e:
+                        logger.warning(f"skip bad target line {s!r}: {e}")
 
     def preprocess(self):
         out = self.config.out_dir
-        self.vulnerable = open(os.path.join(out, self.config.vulnerable), "a")
-        self.not_vulneralbe = open(os.path.join(out, self.config.not_vulnerable), "a")
+        self.vulnerable = open(os.path.join(out, self.config.vulnerable), "a", encoding="utf-8")
+        self.not_vulneralbe = open(os.path.join(out, self.config.not_vulnerable), "a", encoding="utf-8")
         self._load_state_from_disk()
         t = Thread(target=self._cal_total)
         t.start()
@@ -97,19 +103,34 @@ class Data:
             self.not_vulneralbe.write(",".join(item) + "\n")
             self.not_vulneralbe.flush()
 
-    def record_running_state(self):
-        if self.done % 20 == 0:
-            elapsed = self.runned_time + timer.get_time_stamp() - self.create_time
-            state = os.path.join(self.config.out_dir, f".{self.taskid}")
-            with self.state_lock:
-                with open(state, "w") as f:
-                    f.write(f"{self.done},{self.found},{elapsed}")
+    def record_running_state(self, force=False):
+        # Throttle to every 20 targets during the scan; force=True always writes
+        # so Ctrl+C / exit does not lose the last partial batch.
+        if not force and self.done % 20 != 0:
+            return
+        elapsed = self.runned_time + timer.get_time_stamp() - self.create_time
+        state = os.path.join(self.config.out_dir, f".{self.taskid}")
+        with self.state_lock:
+            tmp = state + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(f"{self.done},{self.found},{elapsed}")
+            os.replace(tmp, state)
+
+    def close(self):
+        """Flush state and close result files. Called by Core._shutdown."""
+        try:
+            self.record_running_state(force=True)
+        except Exception as e:
+            logger.error(e)
+        for fh in (self.vulnerable, self.not_vulneralbe):
+            try:
+                fh.close()
+            except Exception:
+                pass
 
     def __del__(self):
         try:
-            self.record_running_state()
-            self.vulnerable.close()
-            self.not_vulneralbe.close()
+            self.close()
         except Exception as e:
             logger.error(e)
 
@@ -128,6 +149,8 @@ class SnapshotPipeline:
         self.task_count_lock = Lock()
 
     def put(self, msg):
+        with self.task_count_lock:
+            self.task_count += 1
         self.pipeline.put(msg)
 
     def empty(self):
@@ -154,6 +177,4 @@ class SnapshotPipeline:
             except Exception:
                 continue
             self.workers.submit(self._snapshot, exploit_func, results)
-            with self.task_count_lock:
-                self.task_count += 1
             time.sleep(0.1)
